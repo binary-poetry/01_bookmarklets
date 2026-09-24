@@ -193,14 +193,24 @@ function MediaManager(props: {
       )
     }}
   >
-    <button
-      class="settings-toggle"
-      aria-label=${settingsTexts[props.chosen.lang].settings}
-      aria-expanded=${showSettings}
-      onClick=${() => setShowSettings(show => !show)}
-    >
-      ⚙
-    </button>
+    <header>
+      <h2>${text.name}</h2>
+      <button
+        class="settings-toggle"
+        aria-label=${settingsTexts[props.chosen.lang].settings}
+        aria-expanded=${showSettings}
+        onClick=${() => setShowSettings(show => !show)}
+      >
+        ⚙
+      </button>
+      <button
+        class="close"
+        aria-label=${text.close}
+        onClick=${() => props.close({ mediaElementIndex: videoIndex, sections })}
+      >
+        ✕
+      </button>
+    </header>
     <div hidden=${showSettings}>
     ${
       props.hasVideo
@@ -238,12 +248,6 @@ function MediaManager(props: {
     }
     </div>
     <${Settings} chosen=${props.chosen} hidden=${!showSettings} />
-    <button
-      class="close"
-      onClick=${() => props.close({ mediaElementIndex: videoIndex, sections })}
-    >
-      ${text.close}
-    </button>
   </dialog>`
 }
 

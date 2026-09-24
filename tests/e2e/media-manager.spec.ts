@@ -102,6 +102,15 @@ for (const [id, base] of Object.entries(variants)) {
 
     const runBookmarklet = (page: Page) => page.evaluate(bookmarklet)
 
+    test("names itself at the top", async ({ page }) => {
+      await openFixture(page)
+
+      await runBookmarklet(page)
+
+      const dialog = page.locator("#binary-poetry-media-manager dialog")
+      await expect(dialog.getByRole("heading")).toHaveText("Media manager")
+    })
+
     test("opens a dialog with one option per video", async ({ page }) => {
       await openFixture(page)
 
@@ -416,6 +425,7 @@ for (const [id, base] of Object.entries(variants)) {
       await page.evaluate(minified)
 
       const dialog = page.locator("#binary-poetry-media-manager dialog")
+      await expect(dialog.getByRole("heading")).toHaveText("Medien-Manager")
       await expect(dialog.locator("th")).toHaveText(["Start", "Ende", ""])
       await expect(
         dialog.getByRole("button", { name: "Schliessen" })

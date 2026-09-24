@@ -88,6 +88,21 @@ export const styles = `
     transform: translateY(calc(-100% - 8px));
   }
 
+  /* The name, then the gear and the close button on the right */
+  header {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    border-bottom: 1px solid var(--bp-control-border);
+    padding-bottom: 0.25em;
+    margin-bottom: 0.5em;
+  }
+
+  h2 {
+    font-size: 1em;
+    margin: 0 auto 0 0;
+  }
+
   /* Tables in quirks mode (no doctype) don't inherit these */
   table {
     color: inherit;
@@ -327,10 +342,19 @@ export function run(chosen: Options): void {
         )
       }
     },
-    toggle,
+    h(
+      "header",
+      null,
+      h("h2", null, text.name),
+      toggle,
+      h(
+        "button",
+        { class: "close", "aria-label": text.close, onclick: closeDialog },
+        "✕"
+      )
+    ),
     main,
-    settings,
-    h("button", { class: "close", onclick: closeDialog }, text.close)
+    settings
   )
   const { host, root, setDynamicCss } = mount(hostId, styles, dialog)
   dialog.showPopover()

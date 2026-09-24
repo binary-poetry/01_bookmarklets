@@ -28,10 +28,9 @@ function reconfigure(source: string, options: object): string {
 export const linkFor = (options: object) =>
   reconfigure(String(bookmarklet), options)
 
-/* The gear sits top right. The hint wraps, so the dialog keeps about its
-   width. The link looks like something to grab, not to click. */
+/* The hint wraps, so the dialog keeps about its width. The link looks like
+   something to grab, not to click. */
 export const settingsStyles = `
-  .settings-toggle { float: right; margin-left: 0.5em; }
   .settings label { display: block; }
   .settings p { max-width: 14em; }
   .settings a {
