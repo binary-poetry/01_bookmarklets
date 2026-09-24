@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT-0
-// spellchecker:ignore ende schliessen deutsch kein dieser seite
+// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache
 
 import { h } from "./lib/h"
 import { mount } from "./lib/mount"
@@ -7,8 +7,12 @@ import type { OptionsDefinition, OptionValues } from "./lib/options"
 
 export const options = {
   lang: {
-    label: "Language",
-    choices: { en: "English", de: "Deutsch" },
+    label: { en: "Language", de: "Sprache" },
+    // Each language in its own, so it can be found in any
+    choices: {
+      en: { en: "English", de: "English" },
+      de: { en: "Deutsch", de: "Deutsch" }
+    },
     default: "en"
   }
 } as const satisfies OptionsDefinition

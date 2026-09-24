@@ -1,9 +1,13 @@
 // SPDX-License-Identifier: MIT-0
 
-/** One option the page shows as a select. `choices` maps values to labels. */
+/** The languages of every bookmarklet's UI (its `lang` option). */
+export type Lang = "en" | "de"
+
+/** One option the page shows as a select. `choices` maps values to labels.
+ * Labels come in every language, so a form shows them in its own. */
 type ChoiceOption = {
-  label: string
-  choices: Record<string, string>
+  label: Record<Lang, string>
+  choices: Record<string, Record<Lang, string>>
   default: string
 }
 
