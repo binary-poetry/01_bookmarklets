@@ -8,7 +8,13 @@ the rest.
 - One file per bookmarklet in `bookmarklets/<id>.ts`, shared code in
   `bookmarklets/lib/`. It exports `options` (`satisfies OptionsDefinition`,
   see `lib/options.ts`) and `run(options)`. Every bookmarklet gets
-  `lang: "en" | "de"` for its UI text.
+  `lang: "en" | "de"` for its UI text. Option labels and choices come in
+  every language; the language choices name each language in its own.
+- Configurable bookmarklets offer the settings view (`lib/settings.ts`)
+  behind a ⚙ button: the options form and a new link to drag, built from
+  the running code, so reconfiguring needs no visit to our site. A
+  draggable dialog must ignore the drag events that bubble up from the
+  link.
 - Each bookmarklet has an icon, `bookmarklets/icons/<id>.txt`: 16 rows of
   16 `#` (lit) or `.` (unlit), pixel art in the logo's colors. The site
   offers it in a bookmark file (Chrome keeps PNG icons of bookmarklets on
