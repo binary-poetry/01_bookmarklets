@@ -4,6 +4,9 @@
 // options-free template into the bookmarklet with these functions.
 
 import type { BuildOptions } from "esbuild"
+import { encodeHref } from "../bookmarklets/lib/href"
+
+export { encodeHref }
 
 /** Stands for the options in the template (see `stdinFor`). */
 export const PLACEHOLDER = "__BOOKMARKLET_OPTIONS__"
@@ -31,16 +34,6 @@ export function frame(output: string): string {
     PLACEHOLDER,
     `/*<options>*/${PLACEHOLDER}/*</options>*/`
   )}}()`
-}
-
-/** `javascript:` URL for a bookmark. Also escapes `!'()*`, which
- * `encodeURIComponent` leaves alone (RFC 3986 reserves them). */
-export function encodeHref(code: string): string {
-  const encoded = encodeURIComponent(code).replace(
-    /[!'()*]/g,
-    c => `%${c.charCodeAt(0).toString(16).toUpperCase()}`
-  )
-  return `javascript:${encoded}`
 }
 
 /** Fills the template's options placeholder with `options` as JSON. */

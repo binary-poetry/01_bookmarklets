@@ -1,4 +1,4 @@
-// spellchecker:ignore webm ende schliessen
+// spellchecker:ignore webm ende schliessen einstellungen sprache deutsch medien
 
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -417,7 +417,12 @@ for (const [id, base] of Object.entries(variants)) {
 
       const dialog = page.locator("#binary-poetry-media-manager dialog")
       await expect(dialog.locator("th")).toHaveText(["Start", "Ende", ""])
-      await expect(dialog.getByRole("button")).toHaveText("Schliessen")
+      await expect(
+        dialog.getByRole("button", { name: "Schliessen" })
+      ).toBeVisible()
+      await expect(
+        dialog.getByRole("button", { name: "Einstellungen" })
+      ).toBeVisible()
     })
 
     test("releases the previous video after switching", async ({ page }) => {
@@ -538,6 +543,108 @@ for (const [id, base] of Object.entries(variants)) {
         ["1", "2"],
         ["4", "5"]
       ])
+    })
+
+    test.describe("settings", () => {
+      test("speak the chosen language, starting with the running one", async ({
+        page
+      }) => {
+        const { minified } = await compileBookmarklet(entry, { lang: "de" })
+        await openFixture(page)
+        await page.evaluate(minified)
+        const dialog = page.locator("#binary-poetry-media-manager dialog")
+
+        await dialog.getByRole("button", { name: "Einstellungen" }).click()
+        const language = dialog.getByLabel("Sprache")
+        await expect(language).toHaveValue("de")
+        // Each language in its own, so it can be found in any
+        await expect(language.getByRole("option")).toHaveText([
+          "English",
+          "Deutsch"
+        ])
+        await expect(dialog.getByRole("link")).toHaveText("Medien-Manager")
+
+        await language.focus()
+        await language.selectOption("en")
+
+        // Relabeled, not rebuilt: a keyboard user stays on the select
+        await expect(dialog.getByLabel("Language")).toBeFocused()
+        await expect(dialog).toContainText(
+          "Drag this link into your bookmarks bar"
+        )
+        await expect(dialog.getByRole("link")).toHaveText("Media manager")
+      })
+
+      test("drags the link out of a Trusted Types page, without moving the dialog", async ({
+        page
+      }) => {
+        await openFixture(page, {
+          csp: "require-trusted-types-for 'script'; script-src 'none'"
+        })
+        await runBookmarklet(page)
+        const dialog = page.locator("#binary-poetry-media-manager dialog")
+        await dialog.getByRole("button", { name: "Settings" }).click()
+        // The bookmarks bar can't be automated: a drop zone on the page gets
+        // the same drag data
+        await page.evaluate(() => {
+          const zone = document.createElement("div")
+          zone.id = "drop-zone"
+          zone.style.cssText =
+            "position: fixed; bottom: 0; width: 100%; height: 50px"
+          zone.addEventListener("dragover", event => event.preventDefault())
+          zone.addEventListener("drop", event => {
+            event.preventDefault()
+            zone.dataset.dropped = event.dataTransfer!.getData("text/plain")
+          })
+          document.body.append(zone)
+        })
+        const link = dialog.getByRole("link")
+        await dialog.evaluate(dialog =>
+          Promise.all(
+            dialog.getAnimations().map(animation => animation.finished)
+          )
+        )
+        const box = await dialog.boundingBox()
+
+        await link.dragTo(page.locator("#drop-zone"))
+
+        await expect(page.locator("#drop-zone")).toHaveAttribute(
+          "data-dropped",
+          (await link.getAttribute("href"))!
+        )
+        expect(await dialog.boundingBox()).toEqual(box)
+      })
+
+      test("doesn't run the link on click", async ({ page }) => {
+        await openFixture(page)
+        await runBookmarklet(page)
+        const dialog = page.locator("#binary-poetry-media-manager dialog")
+        await dialog.getByRole("button", { name: "Settings" }).click()
+
+        await dialog.getByRole("link").click()
+        await page.waitForTimeout(1500) // longer than the 1 s fade-out
+
+        // Running it would toggle the dialog closed
+        await expect(dialog).toBeVisible()
+      })
+
+      test("offers a link to the build with the chosen options", async ({
+        page
+      }) => {
+        await openFixture(page)
+        await runBookmarklet(page)
+        const dialog = page.locator("#binary-poetry-media-manager dialog")
+
+        await dialog.getByRole("button", { name: "Settings" }).click()
+        await dialog.getByLabel("Language").selectOption("de")
+
+        // The same link the site builds for these options
+        const german = await compileBookmarklet(entry, { lang: "de" })
+        await expect(dialog.getByRole("link")).toHaveAttribute(
+          "href",
+          german.href
+        )
+      })
     })
   })
 }

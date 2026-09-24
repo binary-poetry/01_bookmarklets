@@ -7,6 +7,8 @@ import htm from "htm"
 import { h, render } from "preact"
 import { useLayoutEffect, useRef, useState } from "preact/hooks"
 import { mount } from "./lib/mount"
+import type { Lang } from "./lib/options"
+import { linkFor, settingsTexts } from "./lib/settings"
 import "./lib/third-party-licenses"
 import {
   hostId,
@@ -35,7 +37,41 @@ function highlight(element: Element) {
   setTimeout(() => overlay.remove(), 3000)
 }
 
+/** Like `settingsView` in `lib/settings.ts`: a select per option and the
+ * link to drag, in the chosen `lang`. */
+function Settings(props: { chosen: Options; hidden: boolean }) {
+  const [values, setValues] = useState<Record<string, string>>(props.chosen)
+  const lang = values.lang as Lang
+  return html`<div class="settings" hidden=${props.hidden}>
+    ${Object.entries(options).map(
+      ([key, option]) =>
+        html`<label
+          ><span>${option.label[lang]}</span> <select
+            value=${values[key]}
+            onChange=${(event: Event) =>
+              setValues({
+                ...values,
+                [key]: (event.target as HTMLSelectElement).value
+              })}
+          >
+            ${Object.entries(option.choices).map(
+              ([value, labels]) =>
+                html`<option value=${value}>${labels[lang]}</option>`
+            )}
+          </select></label
+        >`
+    )}
+    <p>${settingsTexts[lang].drag}</p>
+    <a
+      href=${linkFor(values)}
+      onClick=${(event: Event) => event.preventDefault()}
+      >${texts[lang].name}</a
+    >
+  </div>`
+}
+
 function MediaManager(props: {
+  chosen: Options
   text: (typeof texts)["en"]
   saved: State
   hasVideo: boolean
@@ -54,6 +90,8 @@ function MediaManager(props: {
   const seekTarget = useRef<number>()
   // Where the dialog was grabbed, relative to its top-left corner
   const grab = useRef({ x: 0, y: 0 })
+  // The settings view takes the main view's place
+  const [showSettings, setShowSettings] = useState(false)
 
   /* Listens on the picked video only. The controller sits on the page's
      global object, so a later run (after close) releases this binding too.
@@ -131,6 +169,8 @@ function MediaManager(props: {
     popover="manual"
     draggable
     onDragStart=${(event: DragEvent) => {
+      // Dragging the settings link bubbles here too: it moves no dialog
+      if (event.target !== event.currentTarget) return
       const rect = (event.currentTarget as Element).getBoundingClientRect()
       grab.current = {
         x: event.clientX - rect.left,
@@ -138,6 +178,7 @@ function MediaManager(props: {
       }
     }}
     onDragEnd=${(event: DragEvent) => {
+      if (event.target !== event.currentTarget) return
       const html = document.documentElement
       const rect = (event.currentTarget as Element).getBoundingClientRect()
       const maxLeft = html.clientWidth - rect.width
@@ -152,6 +193,15 @@ function MediaManager(props: {
       )
     }}
   >
+    <button
+      class="settings-toggle"
+      aria-label=${settingsTexts[props.chosen.lang].settings}
+      aria-expanded=${showSettings}
+      onClick=${() => setShowSettings(show => !show)}
+    >
+      ⚙
+    </button>
+    <div hidden=${showSettings}>
     ${
       props.hasVideo
         ? html`<div>
@@ -186,6 +236,8 @@ function MediaManager(props: {
           </table>`
         : html`<p>${text.noVideo}</p>`
     }
+    </div>
+    <${Settings} chosen=${props.chosen} hidden=${!showSettings} />
     <button
       class="close"
       onClick=${() => props.close({ mediaElementIndex: videoIndex, sections })}
@@ -195,8 +247,9 @@ function MediaManager(props: {
   </dialog>`
 }
 
-export function run({ lang }: Options): void {
+export function run(chosen: Options): void {
   if (toggleOpenDialog()) return
+  const { lang } = chosen
   // Without a video there is nothing to bind, and closing must not
   // overwrite saved sections (the video may just not be loaded yet).
   const hasVideo = document.querySelector("video") !== null
@@ -222,6 +275,7 @@ export function run({ lang }: Options): void {
   }
   render(
     html`<${MediaManager}
+      chosen=${chosen}
       text=${texts[lang]}
       saved=${saved}
       hasVideo=${hasVideo}

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: MIT-0
-// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache
+// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache medien
 
 import { h } from "./lib/h"
 import { mount } from "./lib/mount"
 import type { OptionsDefinition, OptionValues } from "./lib/options"
+import { settingsStyles, settingsTexts, settingsView } from "./lib/settings"
 
 export const options = {
   lang: {
@@ -21,6 +22,7 @@ export type Options = OptionValues<typeof options>
 
 export const texts = {
   en: {
+    name: "Media manager",
     video: "Video: ",
     noVideo: "No video on this page.",
     start: "Start",
@@ -28,6 +30,7 @@ export const texts = {
     close: "Close"
   },
   de: {
+    name: "Medien-Manager",
     video: "Video: ",
     noVideo: "Kein Video auf dieser Seite.",
     start: "Start",
@@ -106,10 +109,11 @@ export const styles = `
   button:hover, select:hover {
     background-color: var(--bp-control-hover);
   }
-`
+${settingsStyles}`
 
-export function run({ lang }: Options): void {
+export function run(chosen: Options): void {
   if (toggleOpenDialog()) return
+  const { lang } = chosen
   const text = texts[lang]
   // Without a video there is nothing to bind, and closing must not
   // overwrite saved sections (the video may just not be loaded yet).
@@ -270,6 +274,31 @@ export function run({ lang }: Options): void {
     }
   }
 
+  // The settings view takes the main view's place
+  const main = h(
+    "div",
+    null,
+    ...(hasVideo
+      ? [h("div", null, text.video, select), h("table", null, sectionRows)]
+      : [h("p", null, text.noVideo)])
+  )
+  const settings = settingsView(options, chosen, lang => texts[lang].name)
+  settings.hidden = true
+  const toggle = h(
+    "button",
+    {
+      class: "settings-toggle",
+      "aria-label": settingsTexts[lang].settings,
+      "aria-expanded": false,
+      onclick: () => {
+        main.hidden = settings.hidden
+        settings.hidden = !main.hidden
+        toggle.setAttribute("aria-expanded", `${main.hidden}`)
+      }
+    },
+    "⚙"
+  )
+
   // Where the dialog was grabbed, relative to its top-left corner
   let grabX = 0
   let grabY = 0
@@ -278,12 +307,15 @@ export function run({ lang }: Options): void {
     {
       popover: "manual",
       draggable: true,
+      // Dragging the settings link bubbles here too: it moves no dialog
       ondragstart: (event: DragEvent) => {
+        if (event.target !== dialog) return
         const rect = dialog.getBoundingClientRect()
         grabX = event.clientX - rect.left
         grabY = event.clientY - rect.top
       },
       ondragend: (event: DragEvent) => {
+        if (event.target !== dialog) return
         const html = document.documentElement
         const rect = dialog.getBoundingClientRect()
         const maxLeft = html.clientWidth - rect.width
@@ -295,9 +327,9 @@ export function run({ lang }: Options): void {
         )
       }
     },
-    ...(hasVideo
-      ? [h("div", null, text.video, select), h("table", null, sectionRows)]
-      : [h("p", null, text.noVideo)]),
+    toggle,
+    main,
+    settings,
     h("button", { class: "close", onclick: closeDialog }, text.close)
   )
   const { host, root, setDynamicCss } = mount(hostId, styles, dialog)
