@@ -11,7 +11,7 @@ reproduces the SHA-256 of the published media manager without trusting the
 website:
 
 ```sh
-git clone --depth 1 --branch media-manager@1.1.1 https://github.com/binary-poetry/01_bookmarklets.git
+git clone --depth 1 --branch media-manager@1.1.2 https://github.com/binary-poetry/01_bookmarklets.git
 cd 01_bookmarklets/bookmarklets
 ```
 
