@@ -1,4 +1,4 @@
-// spellchecker:ignore deutsch sprache anbieter
+// spellchecker:ignore deutsch sprache anbieter breite
 
 import { describe, expect, it } from "vitest"
 import { defaultsOf } from "../../pipeline/options"
@@ -25,5 +25,21 @@ describe("defaultsOf", () => {
     } as const
 
     expect(defaultsOf(definition)).toEqual({ lang: "de", provider: "gmail" })
+  })
+
+  it("keeps a number option's default a number", () => {
+    const definition = {
+      width: {
+        label: { en: "Width", de: "Breite" },
+        min: 480,
+        max: 1920,
+        step: 10,
+        default: 960
+      }
+    } as const
+
+    const width: number = defaultsOf(definition).width
+
+    expect(width).toBe(960)
   })
 })
