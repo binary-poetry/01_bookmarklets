@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT-0
-// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache medien
+// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache medien pausiere spule zwei stellen einen abschnitt markieren
 
 import { h } from "./lib/h"
 import { mount } from "./lib/mount"
@@ -25,6 +25,7 @@ export const texts = {
     name: "Media manager",
     video: "Video: ",
     noVideo: "No video on this page.",
+    hint: "Pause the video and seek to two points to mark a section.",
     start: "Start",
     end: "End",
     close: "Close"
@@ -33,6 +34,7 @@ export const texts = {
     name: "Medien-Manager",
     video: "Video: ",
     noVideo: "Kein Video auf dieser Seite.",
+    hint: "Pausiere das Video und spule zu zwei Stellen, um einen Abschnitt zu markieren.",
     start: "Start",
     end: "Ende",
     close: "Schliessen"
@@ -111,6 +113,17 @@ export const styles = `
 
   input {
     width: 5ch;
+  }
+
+  /* Wraps at the dialog's width instead of widening it, and only shows
+     until the first section */
+  .hint {
+    contain: inline-size;
+    margin: 0.25em 0 0;
+  }
+
+  table:has(.section) + .hint {
+    display: none;
   }
 
   button, select {
@@ -222,14 +235,17 @@ export function run(chosen: Options): void {
     sections.splice(2 * index, 2)
   }
 
+  // One highlight at a time: a new one replaces the last
+  let overlay: HTMLDivElement | undefined
   function highlight(element: Element) {
+    overlay?.remove()
     const rect = element.getBoundingClientRect()
     // A page element: assigning `style` still works under `style-src 'none'`
-    const overlay = h("div", {
+    const current = (overlay = h("div", {
       style: `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: rgb(0 255 0 / 50%)`
-    })
-    document.body.append(overlay)
-    setTimeout(() => overlay.remove(), 3000)
+    }))
+    document.body.append(current)
+    setTimeout(() => current.remove(), 3000)
   }
 
   const select = h(
@@ -293,8 +309,13 @@ export function run(chosen: Options): void {
   const main = h(
     "div",
     null,
+    // A single video needs no picker: the highlight shows which one it is
     ...(hasVideo
-      ? [h("div", null, text.video, select), h("table", null, sectionRows)]
+      ? [
+          ...(videos().length > 1 ? [h("div", null, text.video, select)] : []),
+          h("table", null, sectionRows),
+          h("p", { class: "hint" }, text.hint)
+        ]
       : [h("p", null, text.noVideo)])
   )
   const settings = settingsView(options, chosen, lang => texts[lang].name)
@@ -360,6 +381,7 @@ export function run(chosen: Options): void {
   dialog.showPopover()
   if (hasVideo) {
     restoreState()
+    highlight(video())
     playOnlySections()
   }
 }

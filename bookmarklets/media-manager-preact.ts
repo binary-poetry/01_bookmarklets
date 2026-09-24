@@ -28,13 +28,16 @@ type State = { mediaElementIndex: number; sections: Array<number> }
 const videos = () => document.querySelectorAll("video")
 const storageKey = () => `media-manager-${window.location.href}`
 
+// One highlight at a time: a new one replaces the last
+let overlay: HTMLDivElement | undefined
 function highlight(element: Element) {
+  overlay?.remove()
   const rect = element.getBoundingClientRect()
   // A page element: assigning `style` still works under `style-src 'none'`
-  const overlay = document.createElement("div")
-  overlay.style.cssText = `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: rgb(0 255 0 / 50%)`
-  document.body.append(overlay)
-  setTimeout(() => overlay.remove(), 3000)
+  const current = (overlay = document.createElement("div"))
+  current.style.cssText = `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: rgb(0 255 0 / 50%)`
+  document.body.append(current)
+  setTimeout(() => current.remove(), 3000)
 }
 
 /** Like `settingsView` in `lib/settings.ts`: a select per option and the
@@ -214,7 +217,10 @@ function MediaManager(props: {
     <div hidden=${showSettings}>
     ${
       props.hasVideo
-        ? html`<div>
+        ? // A single video needs no picker: the highlight shows which one
+          html`${
+            videos().length > 1 &&
+            html`<div>
             ${text.video}
             <select
               class="video-select"
@@ -233,7 +239,8 @@ function MediaManager(props: {
                 (_, index) => html`<option value=${index}>${index}</option>`
               )}
             </select>
-          </div>
+          </div>`
+          }
           <table>
             <tbody>
               <tr>
@@ -243,7 +250,8 @@ function MediaManager(props: {
               </tr>
               ${rows}
             </tbody>
-          </table>`
+          </table>
+          <p class="hint">${text.hint}</p>`
         : html`<p>${text.noVideo}</p>`
     }
     </div>
@@ -290,4 +298,5 @@ export function run(chosen: Options): void {
   )
   const dialog = root.querySelector("dialog")!
   dialog.showPopover()
+  if (hasVideo) highlight(videos()[saved.mediaElementIndex]!)
 }

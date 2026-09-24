@@ -1,4 +1,4 @@
-// spellchecker:ignore webm ende schliessen einstellungen sprache deutsch medien
+// spellchecker:ignore webm ende schliessen einstellungen sprache deutsch medien pausiere spule zwei stellen einen abschnitt markieren
 
 import { readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
@@ -19,14 +19,13 @@ const video = readFileSync(
   new URL("fixtures/video.webm", import.meta.url)
 ).toString("base64")
 const fixtureUrl = "http://test.local/"
+const videoTag = `<video muted width="320" height="180" src="data:video/webm;base64,${video}"></video>\n`
 const fixture = `<!doctype html><html><body>
-<video muted width="320" height="180" src="data:video/webm;base64,${video}"></video>
-<video muted width="320" height="180" src="data:video/webm;base64,${video}"></video>
 </body></html>`
 
 async function openFixture(
   page: Page,
-  { head = "", csp = "", quirks = false, videos = true } = {}
+  { head = "", csp = "", quirks = false, videos = 2 } = {}
 ) {
   // A routed URL gives the page a real origin, so `localStorage` works.
   await page.route(fixtureUrl, route =>
@@ -37,7 +36,7 @@ async function openFixture(
         .replace("<body>", `<head>${head}</head><body>`)
         // Without a doctype, tables don't inherit color and font.
         .replace(quirks ? "<!doctype html>" : "", "")
-        .replace(videos ? "" : /<video .*<\/video>\n/g, "")
+        .replace("</body>", `${videoTag.repeat(videos)}</body>`)
     })
   )
   await page.goto(fixtureUrl)
@@ -130,6 +129,24 @@ for (const [id, base] of Object.entries(variants)) {
         ["1", "1"]
       ])
       await expect(dialog.locator("th")).toHaveText(["Start", "End", ""])
+    })
+
+    test("explains how to mark a section while there is none", async ({
+      page
+    }) => {
+      await openFixture(page)
+      await runBookmarklet(page)
+      const dialog = page.locator("#binary-poetry-media-manager dialog")
+      const hint = dialog.getByText(
+        "Pause the video and seek to two points to mark a section."
+      )
+      await expect(hint).toBeVisible()
+
+      for (const time of [1, 2]) await seek(page, 0, time)
+      await expect(hint).toBeHidden()
+
+      await dialog.locator(".section-delete").click()
+      await expect(hint).toBeVisible()
     })
 
     test("marks a section per two seeks of the paused video", async ({
@@ -284,6 +301,30 @@ for (const [id, base] of Object.entries(variants)) {
       expect(fromGap, "plays the restored sections").toBeGreaterThanOrEqual(4)
     })
 
+    test("shows no video picker for a single video", async ({ page }) => {
+      await openFixture(page, { videos: 1 })
+
+      await runBookmarklet(page)
+
+      const dialog = page.locator("#binary-poetry-media-manager dialog")
+      await expect(dialog.locator("th").first()).toBeVisible()
+      await expect(dialog).not.toContainText("Video:")
+      await expect(dialog.getByRole("combobox")).toHaveCount(0)
+    })
+
+    test("highlights the video it controls when it opens", async ({ page }) => {
+      await openFixture(page)
+
+      await runBookmarklet(page)
+
+      const highlight = page.locator(
+        "body > div:not(#binary-poetry-media-manager)"
+      )
+      expect(await highlight.boundingBox()).toEqual(
+        await page.locator("video").first().boundingBox()
+      )
+    })
+
     test("highlights a newly picked video and plays its sections", async ({
       page
     }) => {
@@ -325,7 +366,7 @@ for (const [id, base] of Object.entries(variants)) {
       const dialog = page.locator("#binary-poetry-media-manager dialog")
       const { width } = (await dialog.boundingBox())!
 
-      await openFixture(page, { videos: false })
+      await openFixture(page, { videos: 0 })
       await runBookmarklet(page)
 
       await expect(dialog).toContainText("No video on this page.")
@@ -336,7 +377,7 @@ for (const [id, base] of Object.entries(variants)) {
     test("keeps the saved sections when there is no video", async ({
       page
     }) => {
-      await openFixture(page, { videos: false })
+      await openFixture(page, { videos: 0 })
       const saved = JSON.stringify({ mediaElementIndex: 0, sections: [1, 2] })
       await page.evaluate(
         saved => localStorage.setItem(`media-manager-${location.href}`, saved),
@@ -427,6 +468,9 @@ for (const [id, base] of Object.entries(variants)) {
       const dialog = page.locator("#binary-poetry-media-manager dialog")
       await expect(dialog.getByRole("heading")).toHaveText("Medien-Manager")
       await expect(dialog.locator("th")).toHaveText(["Start", "Ende", ""])
+      await expect(dialog).toContainText(
+        "Pausiere das Video und spule zu zwei Stellen, um einen Abschnitt zu markieren."
+      )
       await expect(
         dialog.getByRole("button", { name: "Schliessen" })
       ).toBeVisible()
