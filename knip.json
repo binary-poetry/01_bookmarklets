@@ -1,0 +1,7 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // the bookmarklets are compiled via esbuild's `stdin`, not imported, and
+  // `pipeline/` is the API the website uses (build, options form, compiler)
+  "entry": ["bookmarklets/*.ts", "pipeline/*.ts"],
+  "project": ["bookmarklets/**/*.ts", "pipeline/**/*.ts", "tests/**/*.ts"]
+}

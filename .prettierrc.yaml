@@ -1,3 +1,9 @@
 arrowParens: avoid
 semi: false
 trailingComma: none
+overrides:
+  # template literal text is published byte for byte (esbuild doesn't
+  # minify it), so reformatting an html`` template would change the hash
+  - files: "bookmarklets/**"
+    options:
+      embeddedLanguageFormatting: "off"

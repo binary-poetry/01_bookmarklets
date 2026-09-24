@@ -5,7 +5,7 @@
     // (`./lib/h`), as esbuild resolves them
     "module": "ESNext",
     "moduleResolution": "Bundler",
-    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "lib": ["ES2023", "DOM", "DOM.Iterable"],
     "types": ["node"],
     "noEmit": true,
     "strict": true,

@@ -25,14 +25,18 @@
     "lint:fix:prettier": "prettier --write '**/*'",
     "lint:fix:eslint": "eslint --fix '**/*.{ts,mts,js,mjs}'",
     "test:unit": "vitest",
-    "test:unit:ci": "vitest run --passWithNoTests"
+    "test:unit:ci": "vitest run --passWithNoTests",
+    "test:e2e": "playwright test",
+    "test:e2e:report": "playwright show-report tests/e2e/reports/html"
   },
   "devDependencies": {
     "@commitlint/cli": "^21.2.3",
     "@commitlint/config-conventional": "^21.2.3",
     "@eslint/js": "^10.0.1",
+    "@playwright/test": "^1.63.0",
     "@types/node": "^24.13.6",
     "cspell": "^10.3.3",
+    "esbuild": "0.28.2",
     "eslint": "^10.11.0",
     "husky": "^9.1.7",
     "knip": "^6.38.0",
@@ -42,5 +46,9 @@
     "typescript": "^5.9.3",
     "typescript-eslint": "^8.70.1",
     "vitest": "^5.0.1"
+  },
+  "dependencies": {
+    "htm": "3.1.1",
+    "preact": "10.29.8"
   }
 }

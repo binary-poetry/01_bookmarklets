@@ -6,7 +6,7 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -19,3 +19,14 @@ jobs:
         run: npm run lint
       - name: Test
         run: npm run test:unit:ci
+      - name: Install Playwright browsers
+        run: npx playwright install --with-deps chromium
+      - name: Test end to end
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: playwright-report
+          path: tests/e2e/reports/
+          retention-days: 7
