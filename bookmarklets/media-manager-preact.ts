@@ -35,7 +35,7 @@ function highlight(element: Element) {
   const rect = element.getBoundingClientRect()
   // A page element: assigning `style` still works under `style-src 'none'`
   const current = (overlay = document.createElement("div"))
-  current.style.cssText = `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: rgb(0 255 0 / 50%)`
+  current.style.cssText = `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: oklch(84% .15 90deg / 50%)`
   document.body.append(current)
   setTimeout(() => current.remove(), 3000)
 }
@@ -130,10 +130,23 @@ function MediaManager(props: {
         const target = seekTarget.current
         setSections(sections =>
           target === undefined
-            ? [...sections, media.currentTime]
-            : sections.map((time, index) =>
-                index === target ? media.currentTime : time
-              )
+            ? sections.length % 2
+              ? // Two points make a section, whichever came first
+                [
+                  ...sections.slice(0, -1),
+                  ...[sections.at(-1)!, media.currentTime].sort((a, b) => a - b)
+                ]
+              : [...sections, media.currentTime]
+            : // An end before its start can't play: ignore such a seek
+              (
+                  target % 2
+                    ? media.currentTime < sections[target ^ 1]!
+                    : media.currentTime > sections[target ^ 1]!
+                )
+              ? sections
+              : sections.map((time, index) =>
+                  index === target ? media.currentTime : time
+                )
         )
       },
       { signal }

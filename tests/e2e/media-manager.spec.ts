@@ -163,6 +163,41 @@ for (const [id, base] of Object.entries(variants)) {
       ])
     })
 
+    test("marks a section from its two points in either order", async ({
+      page
+    }) => {
+      await openFixture(page)
+      await runBookmarklet(page)
+
+      for (const time of [5, 2]) await seek(page, 0, time)
+      const fromBefore = await playFrom(page, 0, 1)
+
+      expect(await sectionRows(page)).toEqual([["2", "5"]])
+      expect(fromBefore, "jumps to the start").toBeGreaterThanOrEqual(2)
+      expect(fromBefore).toBeLessThan(3)
+    })
+
+    test("ignores an edit that would put the end before the start", async ({
+      page
+    }) => {
+      await openFixture(page)
+      await runBookmarklet(page)
+      for (const time of [2, 5]) await seek(page, 0, time)
+      const boundary = (name: string) =>
+        page.locator(`#binary-poetry-media-manager .section-${name}`)
+
+      await boundary("start").focus()
+      await seek(page, 0, 7)
+      await boundary("end").focus()
+      await seek(page, 0, 1)
+      await boundary("end").blur()
+      const fromAfterEnd = await playFrom(page, 0, 6)
+
+      expect(await sectionRows(page)).toEqual([["2", "5"]])
+      expect(fromAfterEnd, "still plays 2–5").toBeGreaterThanOrEqual(2)
+      expect(fromAfterEnd).toBeLessThan(3)
+    })
+
     test("updates the focused boundary on seek instead of adding one", async ({
       page
     }) => {
@@ -322,6 +357,11 @@ for (const [id, base] of Object.entries(variants)) {
       )
       expect(await highlight.boundingBox()).toEqual(
         await page.locator("video").first().boundingBox()
+      )
+      // The site's amber, see-through
+      await expect(highlight).toHaveCSS(
+        "background-color",
+        "oklch(0.84 0.15 90 / 0.5)"
       )
     })
 

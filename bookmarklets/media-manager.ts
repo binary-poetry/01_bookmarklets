@@ -184,15 +184,21 @@ export function run(chosen: Options): void {
   function onSeeked(media: HTMLVideoElement) {
     if (!media.paused) return
     if (seekTarget) {
-      seekTarget.value = `${Math.round(media.currentTime)}`
-      const inputs = root.querySelectorAll(".section-start, .section-end")
-      for (const [index, candidate] of inputs.entries()) {
-        if (candidate === seekTarget) sections[index] = media.currentTime
-      }
+      const time = media.currentTime
+      const index = [
+        ...root.querySelectorAll(".section-start, .section-end")
+      ].indexOf(seekTarget)
+      // An end before its start can't play: ignore such a seek
+      const other = sections[index ^ 1]!
+      if (index % 2 ? time < other : time > other) return
+      sections[index] = time
+      seekTarget.value = `${Math.round(time)}`
       return
     }
     sections.push(media.currentTime)
     if (sections.length % 2 === 0) {
+      // Two points make a section, whichever came first
+      sections.push(...sections.splice(-2).sort((a, b) => a - b))
       addSectionRow(
         sections[sections.length - 2]!,
         sections[sections.length - 1]!
@@ -242,7 +248,7 @@ export function run(chosen: Options): void {
     const rect = element.getBoundingClientRect()
     // A page element: assigning `style` still works under `style-src 'none'`
     const current = (overlay = h("div", {
-      style: `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: rgb(0 255 0 / 50%)`
+      style: `position: fixed; pointer-events: none; z-index: 1234; top: ${rect.top}px; left: ${rect.left}px; width: ${rect.width}px; height: ${rect.height}px; background-color: oklch(84% .15 90deg / 50%)`
     }))
     document.body.append(current)
     setTimeout(() => current.remove(), 3000)
