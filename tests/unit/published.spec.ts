@@ -10,9 +10,9 @@ import type { OptionsDefinition } from "../../bookmarklets/lib/options"
  * counts, e.g. template text is published byte for byte. */
 const published = {
   "media-manager":
-    "730ed6b28b56fc50254f25ffb67add2233bea5bc2af36a88690b6abeb23fef4b",
+    "c1c5421e3b6ac92fa74225d874f01adca0d0403d737a2e3db15f01e96ecbff6e",
   "media-manager-preact":
-    "681619d0e5bec00abce2cfab9417f74d0051ce4e4245892726031ed1dc3514c6"
+    "3933af5966807837b1f824c9b8eea608a81d889359987ff795716a6ee7138c9f"
 }
 
 describe("the published bookmarklets", () => {

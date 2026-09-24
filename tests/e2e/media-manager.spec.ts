@@ -310,6 +310,54 @@ for (const [id, base] of Object.entries(variants)) {
       expect(beyond.top).toBe(0)
     })
 
+    test("falls back to the first video when the saved one is gone", async ({
+      page
+    }) => {
+      await openFixture(page, { videos: 1 })
+      await page.evaluate(() =>
+        localStorage.setItem(
+          `media-manager-${location.href}`,
+          JSON.stringify({ mediaElementIndex: 1, sections: [1, 2] })
+        )
+      )
+
+      await runBookmarklet(page)
+      const fromBeforeStart = await playFrom(page, 0, 0.2)
+
+      expect(await sectionRows(page)).toEqual([["1", "2"]])
+      expect(
+        fromBeforeStart,
+        "plays the restored section"
+      ).toBeGreaterThanOrEqual(1)
+      expect(fromBeforeStart).toBeLessThan(2)
+    })
+
+    test("says once that the saved video is gone", async ({ page }) => {
+      await openFixture(page, { videos: 1 })
+      await page.evaluate(() =>
+        localStorage.setItem(
+          `media-manager-${location.href}`,
+          JSON.stringify({ mediaElementIndex: 1, sections: [1, 2] })
+        )
+      )
+      const dialog = page.locator("#binary-poetry-media-manager dialog")
+      const notice = dialog.getByText(
+        "Video 1 from last time is gone, so this is video 0."
+      )
+
+      await runBookmarklet(page)
+      await expect(notice).toBeVisible()
+      await dialog.getByRole("button", { name: "Dismiss" }).click()
+      await expect(notice).toHaveCount(0)
+
+      // Closing saves the sections under video 0
+      await dialog.getByRole("button", { name: "Close" }).click()
+      await expect(page.locator("#binary-poetry-media-manager")).toHaveCount(0)
+      await runBookmarklet(page)
+      await expect(dialog).toBeVisible()
+      await expect(notice).toHaveCount(0)
+    })
+
     test("saves the sections per URL on close and restores them", async ({
       page
     }) => {

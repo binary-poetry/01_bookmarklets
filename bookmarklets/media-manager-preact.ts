@@ -77,6 +77,8 @@ function MediaManager(props: {
   chosen: Options
   text: (typeof texts)["en"]
   saved: State
+  /** The saved video, if the page no longer has it */
+  gone: number | undefined
   hasVideo: boolean
   close: (state: State) => void
   setDynamicCss: (css: string) => void
@@ -85,6 +87,7 @@ function MediaManager(props: {
   // flat: [start0, end0, start1, …] in s
   const [sections, setSections] = useState(saved.sections)
   const [videoIndex, setVideoIndex] = useState(saved.mediaElementIndex)
+  const [gone, setGone] = useState(props.gone)
   // Preact renders asynchronously, so the video's listeners read refs.
   const live = useRef(sections)
   live.current = sections
@@ -229,6 +232,18 @@ function MediaManager(props: {
     </header>
     <div hidden=${showSettings}>
     ${
+      gone !== undefined &&
+      html`<p class="notice">
+      <span>${text.gone(gone)}</span>
+      <button
+        aria-label=${text.dismiss}
+        onClick=${() => setGone(undefined)}
+      >
+        ✕
+      </button>
+    </p>`
+    }
+    ${
       props.hasVideo
         ? // A single video needs no picker: the highlight shows which one
           html`${
@@ -281,6 +296,12 @@ export function run(chosen: Options): void {
   const saved = (JSON.parse(
     window.localStorage.getItem(storageKey()) ?? "null"
   ) as State | null) ?? { mediaElementIndex: 0, sections: [] }
+  // The page may have fewer videos now: fall back to the first one
+  const gone =
+    hasVideo && !videos()[saved.mediaElementIndex]
+      ? saved.mediaElementIndex
+      : undefined
+  if (gone !== undefined) saved.mediaElementIndex = 0
 
   const { host, root, setDynamicCss } = mount(hostId, styles)
   function close(state: State) {
@@ -303,6 +324,7 @@ export function run(chosen: Options): void {
       chosen=${chosen}
       text=${texts[lang]}
       saved=${saved}
+      gone=${gone}
       hasVideo=${hasVideo}
       close=${close}
       setDynamicCss=${setDynamicCss}

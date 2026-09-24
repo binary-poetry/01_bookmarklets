@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT-0
-// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache medien pausiere spule zwei stellen einen abschnitt markieren
+// spellchecker:ignore ende schliessen deutsch kein dieser seite sprache medien pausiere spule zwei stellen einen abschnitt markieren vom letzten weg darum jetzt ausblenden
 
 import { h } from "./lib/h"
 import { mount } from "./lib/mount"
@@ -25,6 +25,9 @@ export const texts = {
     name: "Media manager",
     video: "Video: ",
     noVideo: "No video on this page.",
+    gone: (index: number) =>
+      `Video\u00a0${index} from last time is gone, so this is video\u00a00.`,
+    dismiss: "Dismiss",
     hint: "Pause the video and seek to two points to mark a section.",
     start: "Start",
     end: "End",
@@ -34,6 +37,9 @@ export const texts = {
     name: "Medien-Manager",
     video: "Video: ",
     noVideo: "Kein Video auf dieser Seite.",
+    gone: (index: number) =>
+      `Video\u00a0${index} vom letzten Mal ist weg, darum ist es jetzt Video\u00a00.`,
+    dismiss: "Ausblenden",
     hint: "Pausiere das Video und spule zu zwei Stellen, um einen Abschnitt zu markieren.",
     start: "Start",
     end: "Ende",
@@ -115,11 +121,22 @@ export const styles = `
     width: 5ch;
   }
 
-  /* Wraps at the dialog's width instead of widening it, and only shows
-     until the first section */
-  .hint {
+  /* Wrap at the dialog's width instead of widening it */
+  .hint, .notice {
     contain: inline-size;
+  }
+
+  /* Only until the first section */
+  .hint {
     margin: 0.25em 0 0;
+  }
+
+  /* The text, and the dismiss button top right like in the title */
+  .notice {
+    display: flex;
+    align-items: start;
+    gap: 0.5em;
+    margin: 0 0 0.5em;
   }
 
   table:has(.section) + .hint {
@@ -304,6 +321,21 @@ export function run(chosen: Options): void {
     ) as { mediaElementIndex: number; sections: Array<number> } | null
     if (!state) return
     videoIndex = state.mediaElementIndex
+    // The page may have fewer videos now: fall back to the first one
+    if (!videos()[videoIndex]) {
+      const notice = h(
+        "p",
+        { class: "notice" },
+        h("span", null, text.gone(videoIndex)),
+        h(
+          "button",
+          { "aria-label": text.dismiss, onclick: () => notice.remove() },
+          "✕"
+        )
+      )
+      main.prepend(notice)
+      videoIndex = 0
+    }
     select.value = `${videoIndex}`
     sections.push(...state.sections)
     for (let i = 0; i < sections.length - 1; i += 2) {
