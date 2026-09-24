@@ -5,6 +5,12 @@ bookmarklets
 commitlint
 esbuild
 extensionless
+IDAT
+IEND
+IHDR
 nvmrc
 oklch
+paeth
 remigius
+rrggbb
+unfilter

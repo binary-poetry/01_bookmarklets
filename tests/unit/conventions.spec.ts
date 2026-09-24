@@ -1,6 +1,7 @@
 import { readdirSync, readFileSync } from "node:fs"
 import { fileURLToPath } from "node:url"
 import { describe, expect, it } from "vitest"
+import { iconDataUrl } from "../../pipeline/icon"
 
 // Top-level files in `bookmarklets/` are bookmarklets; shared code goes to
 // `bookmarklets/lib/`.
@@ -29,6 +30,16 @@ describe.each(bookmarklets)("the bookmarklet %s", id => {
     // Unit tests can't show that a bookmarklet works on a page: Trusted
     // Types, CSP and the top layer only exist in a real browser
     expect(specs.some(spec => spec.includes(`"${id}"`))).toBe(true)
+  })
+
+  it("has a valid icon in `bookmarklets/icons/<id>.txt`", () => {
+    const grid = readFileSync(
+      new URL(`bookmarklets/icons/${id}.txt`, root),
+      "utf8"
+    )
+
+    // The site puts it into the bookmark file it offers for download
+    expect(() => iconDataUrl(grid)).not.toThrow()
   })
 })
 

@@ -9,6 +9,10 @@ the rest.
   `bookmarklets/lib/`. It exports `options` (`satisfies OptionsDefinition`,
   see `lib/options.ts`) and `run(options)`. Every bookmarklet gets
   `lang: "en" | "de"` for its UI text.
+- Each bookmarklet has an icon, `bookmarklets/icons/<id>.txt`: 16 rows of
+  16 `#` (lit) or `.` (unlit), pixel art in the logo's colors. The site
+  offers it in a bookmark file (Chrome keeps PNG icons of bookmarklets on
+  import, Firefox drops them).
 - Build the DOM with `h()` (`lib/h.ts`), put the UI in a shadow root with
   `mount()` (`lib/mount.ts`): adopted stylesheets survive a strict
   `style-src`, `:host { all: initial }` keeps the page's styles out, and
