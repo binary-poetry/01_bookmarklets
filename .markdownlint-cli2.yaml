@@ -1,0 +1,8 @@
+config:
+  default: true
+  MD013: false # line length
+  MD033: false # inline HTML
+ignores:
+  - node_modules
+  - tests/e2e/reports # playwright's own failure reports
+  - TODO.md # private, gitignored working notes

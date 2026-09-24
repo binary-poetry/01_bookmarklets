@@ -1,0 +1,46 @@
+{
+  "name": "@binary-poetry/bookmarklets",
+  "private": true,
+  "description": "Frozen, auditable bookmarklets, built from TypeScript",
+  "license": "MIT-0",
+  "author": "Andreas Remigius Schmidt",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/binary-poetry/01_bookmarklets.git"
+  },
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "prepare": "husky",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "lint": "npm run lint:prettier && npm run lint:cspell && npm run lint:markdown && npm run lint:eslint && npm run lint:knip && npm run typecheck",
+    "lint:knip": "knip",
+    "lint:prettier": "prettier --no-error-on-unmatched-pattern --ignore-unknown --list-different '**/*'",
+    "lint:cspell": "cspell --dot --no-must-find-files --no-progress '**/*'",
+    "lint:markdown": "markdownlint-cli2 '**/*.md' '!node_modules/**'",
+    "lint:eslint": "eslint --max-warnings=0 '**/*.{ts,mts,js,mjs}'",
+    "lint:fix": "npm run lint:fix:prettier && npm run lint:fix:eslint",
+    "lint:fix:prettier": "prettier --write '**/*'",
+    "lint:fix:eslint": "eslint --fix '**/*.{ts,mts,js,mjs}'",
+    "test:unit": "vitest",
+    "test:unit:ci": "vitest run --passWithNoTests"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^24.13.6",
+    "cspell": "^10.3.3",
+    "eslint": "^10.11.0",
+    "husky": "^9.1.7",
+    "knip": "^6.38.0",
+    "lint-staged": "^17.5.1",
+    "markdownlint-cli2": "^0.23.3",
+    "prettier": "^3.9.9",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.70.1",
+    "vitest": "^5.0.1"
+  }
+}

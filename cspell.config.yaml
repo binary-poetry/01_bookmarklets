@@ -1,0 +1,17 @@
+version: "0.2"
+language: en
+dictionaryDefinitions:
+  - name: project-words
+    path: ./cspell.project-words.txt
+    addWords: true
+dictionaries:
+  - project-words
+ignorePaths:
+  - .git
+  - TODO.md # private, gitignored working notes
+  - ".husky/_"
+  - node_modules
+  - tests/e2e/reports # playwright's own html/trace output
+  - package-lock.json
+  - LICENSE
+  - cspell.project-words.txt

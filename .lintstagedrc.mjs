@@ -1,0 +1,33 @@
+import { ESLint } from "eslint"
+
+const removeIgnoredFiles = async files => {
+  const eslint = new ESLint()
+  const isIgnored = await Promise.all(
+    files.map(file => eslint.isPathIgnored(file))
+  )
+  return files.filter((_, i) => !isIgnored[i])
+}
+
+export default {
+  "**/*": [
+    "prettier --no-error-on-unmatched-pattern --ignore-unknown --list-different",
+    "cspell --dot --no-must-find-files --no-progress"
+  ],
+  "**/*.md": "markdownlint-cli2",
+  // function form: the check is package.json <-> lock, so the staged file
+  // names are irrelevant; --dry-run reads neither node_modules nor the
+  // registry, which is what makes it cheap enough for a hook
+  "package{,-lock}.json": () => "npm ci --dry-run --ignore-scripts",
+  "**/*.{ts,mts,js,mjs}": [
+    async files => {
+      const filesToLint = await removeIgnoredFiles(files)
+      if (filesToLint.length === 0) {
+        return []
+      }
+      return `eslint --max-warnings=0 ${filesToLint.join(" ")}`
+    },
+    "vitest run --passWithNoTests",
+    // function form: project-wide typecheck regardless of staged files
+    () => "tsc --noEmit -p tsconfig.json"
+  ]
+}
