@@ -7,7 +7,7 @@ import htm from "htm"
 import { h, render } from "preact"
 import { useLayoutEffect, useRef, useState } from "preact/hooks"
 import { mount } from "./lib/mount"
-import "./third-party-licenses"
+import "./lib/third-party-licenses"
 import {
   hostId,
   options,
